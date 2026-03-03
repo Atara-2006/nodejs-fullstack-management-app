@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Whisper - הוספת יצירה</title>
+    <style>
+        :root { --primary: #1a5e5d; --bg: #fdfdf5; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0;
+            display: none; 
+        }
+        .form-card { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 25px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:hover { background: #144a49; }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <h2>הוספת יצירה חדשה</h2>
+    <form id="addPaintingForm">
+        <input type="text" name="title" placeholder="שם היצירה" required>
+        <textarea name="description" rows="3" placeholder="תיאור היצירה..."></textarea>
+        <input type="number" name="price" placeholder="מחיר (₪)" required>
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">פרסמי יצירה</button>
+    </form>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        alert("גישה חסומה: עלייך להתחבר כמנהלת או אמנית כדי לגשת לדף זה.");
+        window.location.href = '/users/login';
+    } else {
+        document.body.style.display = 'flex';
+    }
+
+    document.getElementById('addPaintingForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+
+        try {
+            const res = await fetch('/paintings/add', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData
+            });
+
+            if (res.ok) {
+                alert('היצירה נוספה בהצלחה!');
+                window.location.href = '/paintings';
+            } else if (res.status === 401 || res.status === 403) {
+                const msg = await res.text();
+                alert("אין לך הרשאה מתאימה: " + msg);
+                window.location.href = '/users/login';
+            } else {
+                const errorMsg = await res.text();
+                alert("שגיאת שרת: " + errorMsg);
+            }
+        } catch (err) {
+            console.error("Fetch error:", err);
+            alert("שגיאת תקשורת עם השרת");
+        }
+    });
+</script>
+
+</body>
+</html>

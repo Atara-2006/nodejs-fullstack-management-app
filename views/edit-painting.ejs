@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Art Whisper - עריכת יצירה</title>
+    <style>
+        :root { --primary: #1a5e5d; --accent: #7dd3d2; --bg: #fdfdf5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 50px; }
+        .card { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+        h2 { color: var(--primary); text-align: center; }
+        .group { margin-bottom: 15px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>עריכת יצירה</h2>
+    <form id="editForm" onsubmit="handleUpdate(event)">
+        <div class="group">
+            <label>כותרת</label>
+            <input type="text" id="title" required>
+        </div>
+        <div class="group">
+            <label>מחיר</label>
+            <input type="number" id="price" required>
+        </div>
+        <div class="group">
+            <label>תיאור</label>
+            <textarea id="description" rows="4"></textarea>
+        </div>
+        <button type="submit">שמור שינויים</button>
+    </form>
+    <p style="text-align: center;"><a href="/paintings" style="color: var(--accent); text-decoration: none;">ביטול</a></p>
+</div>
+
+<script>
+    const paintingId = window.location.pathname.split('/').pop();
+
+    async function fetchPainting() {
+        const res = await fetch(`/paintings/api/${paintingId}`);
+        const p = await res.json();
+        document.getElementById('title').value = p.title;
+        document.getElementById('price').value = p.price;
+        document.getElementById('description').value = p.description || '';
+    }
+
+    async function handleUpdate(event) {
+        event.preventDefault();
+        const token = localStorage.getItem('token');
+        const data = {
+            title: document.getElementById('title').value,
+            price: document.getElementById('price').value,
+            description: document.getElementById('description').value
+        };
+
+        const res = await fetch(`/paintings/${paintingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            alert('עודכן בהצלחה!');
+            window.location.href = `/paintings/details/${paintingId}`;
+        } else {
+            const err = await res.text();
+            alert('שגיאה: ' + err);
+        }
+    }
+
+    fetchPainting();
+</script>
+</body>
+</html>

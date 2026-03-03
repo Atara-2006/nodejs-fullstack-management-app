@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Art Whisper - גלריה</title>
+    <style>
+        :root { --primary: #1a5e5d; --accent: #7dd3d2; --bg: #fdfdf5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        header { background: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo-text { font-family: serif; font-size: 2.5em; color: var(--primary); margin: 0; }
+        .nav-links { margin-top: 15px; }
+        .nav-links a { color: var(--primary); text-decoration: none; margin: 0 15px; font-weight: bold; }
+        
+        .gallery-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 30px; 
+            padding: 50px; 
+            max-width: 1200px; 
+            margin: auto; 
+        }
+        .art-card { 
+            background: white; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .art-card:hover { transform: translateY(-10px); }
+        .art-card img { width: 100%; height: 350px; object-fit: cover; }
+        .art-info { padding: 20px; text-align: center; }
+        .art-title { font-size: 1.4em; color: var(--primary); margin: 0; font-weight: bold; }
+        .art-price { color: var(--accent); font-size: 1.1em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="logo-text">Art Whisper</h1>
+        <div class="nav-links">
+            <a href="/paintings">גלריה</a>
+            <a href="/paintings/add" id="addLink" style="display:none;">הוספת יצירה</a>
+            <a href="/users/login" id="loginLink">כניסה</a>
+            <a href="#" onclick="logout()" id="logoutLink" style="display:none;">יציאה</a>
+        </div>
+    </header>
+
+    <div class="gallery-container">
+        <% paintings.forEach(p => { %>
+            <div class="art-card" onclick="location.href='/paintings/details/<%= p._id %>'">
+                <img src="<%= p.imageUrl %>" alt="<%= p.title %>">
+                <div class="art-info">
+                    <p class="art-title"><%= p.title %></p>
+                    <p class="art-price">₪ <%= p.price %></p>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (token) {
+            document.getElementById('loginLink').style.display = 'none';
+            document.getElementById('logoutLink').style.display = 'inline';
+            
+            const user = JSON.parse(atob(token.split('.')[1]));
+            if (user.role === 'artist' || user.role === 'admin') {
+                document.getElementById('addLink').style.display = 'inline';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

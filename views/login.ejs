@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>כניסה והרשמה - Art Whisper</title>
+    <style>
+        :root { --primary: #1a5e5d; --accent: #7dd3d2; --bg: #fdfdf5; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--accent); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-container { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+        .logo-text { font-family: serif; font-size: 2.2em; color: var(--primary); margin-bottom: 5px; }
+        .subtitle { color: var(--accent); letter-spacing: 2px; font-size: 0.75em; margin-bottom: 30px; text-transform: uppercase; }
+        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid #eee; }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #bdc3c7; transition: 0.3s; font-weight: bold; }
+        .tab.active { border-bottom: 3px solid var(--primary); color: var(--primary); }
+        input, select { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #f0f0f0; border-radius: 12px; box-sizing: border-box; background: #fafafa; font-size: 1em; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo-text">Art Whisper</div>
+        <div class="subtitle">EVERY PICTURE TELLS A STORY</div>
+        <div class="tabs">
+            <div id="loginTab" class="tab active" onclick="showForm('login')">כניסה</div>
+            <div id="registerTab" class="tab" onclick="showForm('register')">הרשמה</div>
+        </div>
+
+        <form id="loginForm">
+            <input type="text" id="lUser" placeholder="שם משתמש" required>
+            <input type="password" id="lPass" placeholder="סיסמה" required>
+            <button type="submit">התחבר</button>
+        </form>
+
+        <form id="registerForm" style="display: none;">
+            <input type="text" id="rUser" placeholder="שם משתמש" required>
+            <input type="password" id="rPass" placeholder="סיסמה" required>
+            <select id="rRole">
+                <option value="user">לקוח (צפייה בלבד)</option>
+                <option value="artist">אמן (העלאת יצירות)</option>
+            </select>
+            <button type="submit">הירשם עכשיו</button>
+        </form>
+    </div>
+
+    <script>
+        function showForm(type) {
+            document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+            document.getElementById('registerForm').style.display = type === 'register' ? 'block' : 'none';
+            document.getElementById('loginTab').className = 'tab' + (type === 'login' ? ' active' : '');
+            document.getElementById('registerTab').className = 'tab' + (type === 'register' ? ' active' : '');
+        }
+
+        // לוגיקה עבור כניסה (Login)
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch('/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: lUser.value, password: lPass.value })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.token) {
+                    localStorage.setItem('token', data.token);
+                    console.log("Token saved!");
+                    setTimeout(() => { window.location.href = '/paintings'; }, 100);
+                } else {
+                    alert(data.message || 'שם משתמש או סיסמה שגויים');
+                }
+            } catch (err) {
+                alert("שגיאה בחיבור לשרת");
+            }
+        };
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch('/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: rUser.value, 
+                        password: rPass.value, 
+                        role: rRole.value 
+                    })
+                });
+
+                if (res.ok) {
+                    alert('החשבון נוצר בהצלחה! כעת ניתן להתחבר.');
+                    showForm('login');
+                } else {
+                    const errorText = await res.text();
+                    alert(errorText || 'שגיאה בתהליך ההרשמה');
+                }
+            } catch (err) {
+                alert("שגיאת תקשורת עם השרת");
+            }
+        };
+    </script>
+</body>
+</html>
